@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # HullRakshak Foundation
 
 This project turns the ELEGOO Conqueror tank into a controlled learning
@@ -79,3 +80,6 @@ data/                    Generated logs and calibration results
 6. Safer, non-blocking UNO firmware.
 7. Encoders, closed-loop track-speed control, and assisted driving.
 8. HullRakshak inspection sensors and mission behaviours.
+=======
+# HullRakshak_Robot
+>>>>>>> f9ef5acfcfe7ca5ee3822383d003147d71c524d7
