@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hullrakshak-foundation"
+version = "0.1.0"
+description = "Computer control and telemetry foundation for the ELEGOO Conqueror robot."
+requires-python = ">=3.11"
+dependencies = [
+    "pyserial>=3.5,<4",
+]
+
+[project.scripts]
+hullrakshak-sensors = "hullrakshak.applications.sensor_monitor:main"
+
+[tool.setuptools]
+package-dir = {"" = "host/src"}
+
+[tool.setuptools.packages.find]
+where = ["host/src"]

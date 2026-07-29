@@ -1,0 +1,19 @@
+[serial]
+# Leave empty to discover the UNO automatically.
+port = ""
+baudrate = 9600
+# Opening a serial port resets the UNO. The factory firmware initializes two
+# servos, initializes/calibrates the MPU6050, and then clears its receive buffer.
+# Commands sent before that sequence finishes are silently discarded.
+reset_delay_seconds = 6.0
+# The factory ultrasonic driver can block for about one second when no echo is
+# received, so the host deadline must include comfortable margin.
+response_timeout_seconds = 2.5
+
+[monitor]
+interval_seconds = 0.5
+
+[safety]
+# Reserved for the motor-control milestone.
+maximum_initial_speed = 80
+command_timeout_ms = 500

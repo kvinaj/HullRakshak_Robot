@@ -1,0 +1,2 @@
+[console_scripts]
+hullrakshak-sensors = hullrakshak.applications.sensor_monitor:main

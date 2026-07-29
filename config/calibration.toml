@@ -1,0 +1,19 @@
+[metadata]
+source = "data/logs/first_session.csv"
+recorded_at = "2026-07-29"
+dark_values_are_higher = true
+
+[line.left]
+light_center = 154
+dark_center = 906
+threshold = 530
+
+[line.middle]
+light_center = 180
+dark_center = 904
+threshold = 542
+
+[line.right]
+light_center = 84
+dark_center = 915
+threshold = 500
