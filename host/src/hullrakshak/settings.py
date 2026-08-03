@@ -25,9 +25,27 @@ class MonitorSettings:
 
 
 @dataclass(frozen=True)
+class WifiSettings:
+    host: str
+    port: int
+    connect_timeout_seconds: float
+    response_timeout_seconds: float
+
+
+@dataclass(frozen=True)
+class SafetySettings:
+    maximum_initial_speed: int
+    maximum_command_duration_ms: int
+    teleop_pulse_duration_ms: int
+    obstacle_stop_distance_cm: int
+
+
+@dataclass(frozen=True)
 class Settings:
     serial: SerialSettings
     monitor: MonitorSettings
+    wifi: WifiSettings
+    safety: SafetySettings
 
 
 def load_settings(path: Path = DEFAULT_CONFIG_PATH) -> Settings:
@@ -47,5 +65,23 @@ def load_settings(path: Path = DEFAULT_CONFIG_PATH) -> Settings:
         ),
         monitor=MonitorSettings(
             interval_seconds=float(raw["monitor"]["interval_seconds"])
+        ),
+        wifi=WifiSettings(
+            host=str(raw["wifi"]["host"]),
+            port=int(raw["wifi"]["port"]),
+            connect_timeout_seconds=float(raw["wifi"]["connect_timeout_seconds"]),
+            response_timeout_seconds=float(raw["wifi"]["response_timeout_seconds"]),
+        ),
+        safety=SafetySettings(
+            maximum_initial_speed=int(raw["safety"]["maximum_initial_speed"]),
+            maximum_command_duration_ms=int(
+                raw["safety"]["maximum_command_duration_ms"]
+            ),
+            teleop_pulse_duration_ms=int(
+                raw["safety"]["teleop_pulse_duration_ms"]
+            ),
+            obstacle_stop_distance_cm=int(
+                raw["safety"]["obstacle_stop_distance_cm"]
+            ),
         ),
     )

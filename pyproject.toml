@@ -12,7 +12,11 @@ dependencies = [
 ]
 
 [project.scripts]
+hullrakshak-calibrate = "hullrakshak.applications.calibrate:main"
+hullrakshak-pulse = "hullrakshak.applications.motion_test:main"
+hullrakshak-serial-diagnostic = "hullrakshak.applications.serial_diagnostic:main"
 hullrakshak-sensors = "hullrakshak.applications.sensor_monitor:main"
+hullrakshak-teleop = "hullrakshak.applications.teleop:main"
 
 [tool.setuptools]
 package-dir = {"" = "host/src"}

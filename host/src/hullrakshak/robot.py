@@ -3,20 +3,16 @@
 from __future__ import annotations
 
 import time
-from typing import Protocol
 
+from hullrakshak.control.motion import MotionDirection, MotionLimits, TimedMotion
 from hullrakshak.protocol import encode_command, parse_labeled_integer
 from hullrakshak.sensors.line import LineSensorReadings
 from hullrakshak.settings import Settings
 from hullrakshak.telemetry import TelemetrySnapshot
+from hullrakshak.transport.base import Transport
 from hullrakshak.transport.serial import SerialTransport
-
-
-class Transport(Protocol):
-    def open(self) -> None: ...
-    def close(self) -> None: ...
-    def write(self, data: bytes) -> None: ...
-    def read_frame(self, timeout_seconds: float) -> str: ...
+from hullrakshak.transport.simulated import SimulatedTransport
+from hullrakshak.transport.wifi import WifiTransport
 
 
 class Robot:
@@ -24,20 +20,56 @@ class Robot:
 
     LINE_SENSORS = (("L", 0), ("M", 1), ("R", 2))
 
-    def __init__(self, transport: Transport, response_timeout_seconds: float) -> None:
+    def __init__(
+        self,
+        transport: Transport,
+        response_timeout_seconds: float,
+        motion_limits: MotionLimits,
+    ) -> None:
         self.transport = transport
         self.response_timeout_seconds = response_timeout_seconds
+        self.motion_limits = motion_limits
 
     @classmethod
     def connect_serial(cls, settings: Settings) -> "Robot":
         return cls(
             SerialTransport(settings.serial),
             response_timeout_seconds=settings.serial.response_timeout_seconds,
+            motion_limits=MotionLimits(
+                maximum_speed=settings.safety.maximum_initial_speed,
+                maximum_duration_ms=settings.safety.maximum_command_duration_ms,
+            ),
+        )
+
+    @classmethod
+    def connect_wifi(cls, settings: Settings) -> "Robot":
+        return cls(
+            WifiTransport(settings.wifi),
+            response_timeout_seconds=settings.wifi.response_timeout_seconds,
+            motion_limits=MotionLimits(
+                maximum_speed=settings.safety.maximum_initial_speed,
+                maximum_duration_ms=settings.safety.maximum_command_duration_ms,
+            ),
+        )
+
+    @classmethod
+    def connect_simulated(cls, settings: Settings) -> "Robot":
+        return cls(
+            SimulatedTransport(),
+            response_timeout_seconds=0.1,
+            motion_limits=MotionLimits(
+                maximum_speed=settings.safety.maximum_initial_speed,
+                maximum_duration_ms=settings.safety.maximum_command_duration_ms,
+            ),
         )
 
     def open(self) -> None:
         self.transport.open()
-        self.stop()
+        try:
+            self.stop()
+        except BaseException:
+            self.transport.close()
+            raise
 
     def close(self) -> None:
         try:
@@ -55,6 +87,28 @@ class Robot:
     def stop(self) -> None:
         """Enter standby. The factory protocol may return ``ok`` or no response."""
         self.transport.write(encode_command(100))
+
+    def drive_timed(
+        self,
+        direction: MotionDirection,
+        *,
+        speed: int,
+        duration_ms: int,
+    ) -> None:
+        """Send one validated, self-expiring factory motion command."""
+        motion = TimedMotion(direction, speed, duration_ms)
+        motion.validate(self.motion_limits)
+        self.transport.write(
+            encode_command(
+                2,
+                request_id="MOVE",
+                parameters={
+                    "D1": int(direction),
+                    "D2": speed,
+                    "T": duration_ms,
+                },
+            )
+        )
 
     def _query_integer(
         self,

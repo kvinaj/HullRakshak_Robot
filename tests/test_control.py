@@ -1,0 +1,79 @@
+import unittest
+
+from hullrakshak.calibration import ClassifiedLineSensors, Surface
+from hullrakshak.control.assisted import (
+    DecisionKind,
+    apply_obstacle_guard,
+    line_following_decision,
+)
+from hullrakshak.control.motion import MotionDirection, MotionLimits
+from hullrakshak.settings import load_settings
+from hullrakshak.control.state import RobotMode, RobotStateMachine
+
+
+class MotionLimitTests(unittest.TestCase):
+    def test_rejects_excessive_speed_and_duration(self) -> None:
+        limits = MotionLimits(maximum_speed=80, maximum_duration_ms=500)
+        limits.validate(80, 500)
+        with self.assertRaises(ValueError):
+            limits.validate(81, 500)
+        with self.assertRaises(ValueError):
+            limits.validate(80, 501)
+
+    def test_project_configuration_uses_conservative_limits(self) -> None:
+        settings = load_settings()
+        self.assertEqual(settings.safety.maximum_initial_speed, 100)
+        self.assertEqual(settings.safety.maximum_command_duration_ms, 500)
+        self.assertEqual(settings.safety.teleop_pulse_duration_ms, 250)
+
+
+class StateMachineTests(unittest.TestCase):
+    def test_requires_safe_between_operating_modes(self) -> None:
+        state = RobotStateMachine()
+        state.transition(RobotMode.MANUAL)
+        with self.assertRaises(ValueError):
+            state.transition(RobotMode.AUTONOMOUS)
+        state.transition(RobotMode.SAFE)
+        state.transition(RobotMode.AUTONOMOUS)
+        self.assertTrue(state.movement_allowed)
+
+    def test_fault_disallows_movement_until_return_to_safe(self) -> None:
+        state = RobotStateMachine(RobotMode.MANUAL)
+        state.fault("connection lost")
+        self.assertEqual(state.mode, RobotMode.FAULT)
+        self.assertFalse(state.movement_allowed)
+        state.transition(RobotMode.SAFE)
+        self.assertIsNone(state.fault_reason)
+
+
+class AssistedDecisionTests(unittest.TestCase):
+    def test_obstacle_guard_stops_only_forward_motion(self) -> None:
+        forward = apply_obstacle_guard(MotionDirection.FORWARD, 10, 15)
+        reverse = apply_obstacle_guard(MotionDirection.BACKWARD, 10, 15)
+        self.assertEqual(forward.kind, DecisionKind.STOP)
+        self.assertEqual(reverse.kind, DecisionKind.MOVE)
+
+    def test_centered_line_requests_forward_motion(self) -> None:
+        decision = line_following_decision(
+            ClassifiedLineSensors(
+                left=Surface.LIGHT,
+                middle=Surface.DARK,
+                right=Surface.LIGHT,
+            )
+        )
+        self.assertEqual(decision.kind, DecisionKind.MOVE)
+        self.assertEqual(decision.direction, MotionDirection.FORWARD)
+
+    def test_all_dark_stops_conservatively(self) -> None:
+        decision = line_following_decision(
+            ClassifiedLineSensors(
+                left=Surface.DARK,
+                middle=Surface.DARK,
+                right=Surface.DARK,
+            )
+        )
+        self.assertEqual(decision.kind, DecisionKind.STOP)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -35,3 +35,16 @@ not leave the tracks running.
 6. Maintainable UNO firmware and local failsafes.
 7. Encoders and closed-loop track control.
 8. Assisted and autonomous behaviours.
+
+## Transport interchangeability
+
+```text
+Robot
+├── SerialTransport     USB to UNO
+├── WifiTransport       TCP to ESP32, then UART to UNO
+└── SimulatedTransport  deterministic development without hardware
+```
+
+Applications select a transport through the same command-line option, so
+sensor, control, and future autonomy code does not need separate USB and Wi-Fi
+implementations.

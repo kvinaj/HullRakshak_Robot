@@ -13,7 +13,14 @@ response_timeout_seconds = 2.5
 [monitor]
 interval_seconds = 0.5
 
+[wifi]
+host = "192.168.4.1"
+port = 100
+connect_timeout_seconds = 3.0
+response_timeout_seconds = 2.5
+
 [safety]
-# Reserved for the motor-control milestone.
-maximum_initial_speed = 80
-command_timeout_ms = 500
+maximum_initial_speed = 100
+maximum_command_duration_ms = 500
+teleop_pulse_duration_ms = 250
+obstacle_stop_distance_cm = 15

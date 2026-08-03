@@ -5,17 +5,20 @@ from __future__ import annotations
 import argparse
 import time
 from contextlib import nullcontext
-from dataclasses import replace
 from pathlib import Path
 
 from hullrakshak.calibration import (
     DEFAULT_CALIBRATION_PATH,
     load_line_calibration,
 )
+from hullrakshak.applications.common import (
+    add_connection_arguments,
+    apply_connection_overrides,
+    connect_robot,
+)
 from hullrakshak.data_logging import CsvTelemetryWriter
-from hullrakshak.robot import Robot
 from hullrakshak.settings import DEFAULT_CONFIG_PATH, load_settings
-from hullrakshak.transport.serial import RobotConnectionError
+from hullrakshak.transport.base import RobotConnectionError
 
 
 def build_argument_parser() -> argparse.ArgumentParser:
@@ -28,7 +31,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
         default=DEFAULT_CONFIG_PATH,
         help="Path to robot.toml",
     )
-    parser.add_argument("--port", help="Override serial port auto-discovery")
+    add_connection_arguments(parser)
     parser.add_argument("--interval", type=float, help="Seconds between readings")
     parser.add_argument(
         "--once", action="store_true", help="Read one telemetry snapshot and exit"
@@ -56,11 +59,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
 def main() -> None:
     args = build_argument_parser().parse_args()
     settings = load_settings(args.config)
-    if args.port:
-        settings = replace(
-            settings,
-            serial=replace(settings.serial, port=args.port),
-        )
+    settings = apply_connection_overrides(settings, args)
     interval = (
         args.interval
         if args.interval is not None
@@ -69,7 +68,7 @@ def main() -> None:
     calibration = load_line_calibration(args.calibration) if args.classify else None
 
     try:
-        robot = Robot.connect_serial(settings)
+        robot = connect_robot(settings, args.transport)
         print("Opening robot connection (motors will be commanded to stop)...")
         logger_context = (
             CsvTelemetryWriter(args.log) if args.log else nullcontext(None)

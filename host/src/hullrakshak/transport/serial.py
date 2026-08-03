@@ -10,10 +10,7 @@ from serial.tools import list_ports
 
 from hullrakshak.protocol import FrameDecoder
 from hullrakshak.settings import SerialSettings
-
-
-class RobotConnectionError(RuntimeError):
-    """Raised when a suitable UNO serial connection cannot be established."""
+from hullrakshak.transport.base import RobotConnectionError
 
 
 def discover_serial_port() -> str:
