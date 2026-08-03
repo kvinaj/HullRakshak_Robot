@@ -1,5 +1,6 @@
 import unittest
 
+from hullrakshak.applications.motion_test import build_argument_parser
 from hullrakshak.calibration import ClassifiedLineSensors, Surface
 from hullrakshak.control.assisted import (
     DecisionKind,
@@ -25,6 +26,11 @@ class MotionLimitTests(unittest.TestCase):
         self.assertEqual(settings.safety.maximum_initial_speed, 100)
         self.assertEqual(settings.safety.maximum_command_duration_ms, 500)
         self.assertEqual(settings.safety.teleop_pulse_duration_ms, 250)
+
+    def test_one_shot_defaults_match_verified_raised_track_pulse(self) -> None:
+        args = build_argument_parser().parse_args(["--direction", "forward"])
+        self.assertEqual(args.speed, 100)
+        self.assertEqual(args.duration_ms, 500)
 
 
 class StateMachineTests(unittest.TestCase):

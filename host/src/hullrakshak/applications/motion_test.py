@@ -39,11 +39,11 @@ def build_argument_parser() -> argparse.ArgumentParser:
         required=True,
         help="Pulse direction",
     )
-    parser.add_argument("--speed", type=int, default=50, help="PWM speed")
+    parser.add_argument("--speed", type=int, default=100, help="PWM speed")
     parser.add_argument(
         "--duration-ms",
         type=int,
-        default=200,
+        default=500,
         help="Pulse duration in milliseconds",
     )
     parser.add_argument(

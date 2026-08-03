@@ -148,7 +148,7 @@ def main() -> None:
     speed = (
         args.speed
         if args.speed is not None
-        else min(60, settings.safety.maximum_initial_speed)
+        else settings.safety.maximum_initial_speed
     )
     # Validate before opening the serial connection or asking for confirmation.
     if not 1 <= speed <= settings.safety.maximum_initial_speed:

@@ -7,14 +7,14 @@ The host API currently exposes the factory protocol's time-limited command:
 ```python
 robot.drive_timed(
     MotionDirection.FORWARD,
-    speed=60,
-    duration_ms=250,
+    speed=100,
+    duration_ms=500,
 )
 ```
 
 Default host limits:
 
-- maximum commissioning PWM: 80 out of 255;
+- maximum commissioning PWM: 100 out of 255;
 - maximum command duration: 500 ms;
 - keyboard pulse: 250 ms.
 
@@ -49,7 +49,7 @@ First hardware run:
 hullrakshak-teleop \
   --transport serial \
   --port /dev/cu.usbserial-10 \
-  --speed 60 \
+  --speed 100 \
   --arm
 ```
 
@@ -65,8 +65,8 @@ hullrakshak-pulse \
   --transport serial \
   --port /dev/cu.usbserial-10 \
   --direction forward \
-  --speed 50 \
-  --duration-ms 200 \
+  --speed 100 \
+  --duration-ms 500 \
   --arm
 ```
 

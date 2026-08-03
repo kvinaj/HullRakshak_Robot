@@ -29,16 +29,20 @@
 - conservative line-following decisions
 - ESP32 heartbeat response and frame queuing
 
-## Current recommissioning boundary
+## Recommissioning verified on 2026-08-03
 
-- The repository is standardized on factory UNO protocol `N=2`.
-- The exact firmware currently loaded on the UNO has not been independently
-  identified in the new commissioning sequence.
-- Historical motor results do not substitute for a fresh controlled baseline.
-- No physical motor command is authorized until firmware identity, USB
-  telemetry, and powered-idle checks are recorded again in order.
-- Autonomous actuation remains untested.
+- The exact factory TB6612 hex was written and all 31,500 bytes were verified.
+- USB telemetry at 9600 baud returned line and ultrasonic sensor readings.
+- With motor power on, the robot remained stopped while idle.
+- Factory stop command `{"N":100}` returned `{ok}`.
+- Direct factory `N=4` tests identified `D1` as the right track and `D2` as the
+  left track; each channel and both channels together moved and stopped.
+- PWM 80 moved the right track but did not reliably start the left track.
+- PWM 100 reliably started both raised tracks in the same direction.
+- Factory timed command `N=2`, forward, PWM 100, 500 ms returned
+  `{FORWARD_ok}`; both tracks moved and stopped.
+- The normal `hullrakshak-pulse` Python path repeated that physical result.
+- The active commissioning limit is therefore PWM 100 and 500 ms.
 
-Recommissioning must proceed in order. The first future motion test must use
-raised tracks, speed 60 or lower, a 250 ms pulse, and immediate physical access
-to the power switch.
+Raised-track backward and turning pulses must be reverified next, one direction
+at a time. Floor operation and autonomous actuation remain untested.

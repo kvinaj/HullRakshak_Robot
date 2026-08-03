@@ -30,10 +30,10 @@ Implemented and automatically tested:
 - simulated robot transport;
 - repeatable interactive calibration.
 
-The project is currently being recommissioned from a factory-firmware baseline.
-Historical demonstrations are recorded, but motor operation must be revalidated
-in order from powered idle through a single raised-track pulse. Experimental
-UNO firmware is inactive and must not be uploaded during this baseline.
+The factory-firmware baseline has now been recommissioned through USB telemetry,
+powered idle, individual motor-channel tests, and one raised-track forward
+pulse at the measured reliable starting PWM of 100. Experimental UNO firmware
+is inactive and must not be uploaded during this baseline.
 
 See [STATUS.md](STATUS.md) for the exact validation boundary.
 
