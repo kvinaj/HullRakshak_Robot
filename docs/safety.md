@@ -11,6 +11,8 @@
 - Floor mode permits straight forward or backward pulses only, requires
   `--floor-test`, requires typing `CLEAR` instead of `RAISED`, and has a
   separate 1500 ms ceiling. Normal motion remains capped at 500 ms.
+- Serial floor tests require safe USB-cable routing; Wi-Fi floor tests require
+  confirming that no USB cable is attached to the moving robot.
 
 ## Before motor-control work
 

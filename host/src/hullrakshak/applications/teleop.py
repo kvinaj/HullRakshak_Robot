@@ -60,6 +60,7 @@ def require_physical_safety_confirmation(
     keyboard_controls_available: bool = True,
     floor_test: bool = False,
     direction: str | None = None,
+    tethered: bool = True,
 ) -> None:
     if not sys.stdin.isatty():
         raise SystemExit("Motion control requires an interactive terminal")
@@ -72,10 +73,13 @@ def require_physical_safety_confirmation(
             f"- Place the robot on a flat floor with at least 2 m clear {travel_area}."
         )
         print("- Point the robot away from people, pets, stairs, and obstacles.")
-        print(
-            f"- Route the USB cable toward the robot's {cable_side}, with slack, "
-            "and clear of both tracks."
-        )
+        if tethered:
+            print(
+                f"- Route the USB cable toward the robot's {cable_side}, with "
+                "slack, and clear of both tracks."
+            )
+        else:
+            print("- Confirm that no USB cable is attached to the moving robot.")
     else:
         print("- Both tracks must be raised clear of the bench.")
     print("- Keep the physical power switch within reach.")

@@ -103,6 +103,7 @@ def main() -> None:
         keyboard_controls_available=False,
         floor_test=args.floor_test,
         direction=args.direction,
+        tethered=args.transport == "serial",
     )
     direction = DIRECTION_NAMES[args.direction]
     robot = connect_robot(settings, args.transport, motion_limits=limits)

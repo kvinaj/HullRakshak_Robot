@@ -90,3 +90,17 @@ no correction has been applied yet. Autonomous actuation remains untested.
 
 Mechanical track resistance and tension should be checked before choosing a
 software differential-speed correction.
+
+## Untethered Wi-Fi floor control verified on 2026-08-04
+
+- Wi-Fi telemetry through the ESP32 bridge returned line and ultrasonic data.
+- One raised-track Wi-Fi forward pulse at PWM 100 for 500 ms moved both tracks
+  and stopped automatically.
+- With USB disconnected, one Wi-Fi forward floor pulse at PWM 100 for 1500 ms
+  travelled approximately 20.5 cm, reproduced the approximately 1 cm leftward
+  front deviation, and stopped automatically.
+- Matching USB and Wi-Fi floor results confirm that the measured drift is not
+  caused by the host transport.
+
+Wi-Fi keyboard control must be recommissioned with raised tracks before any
+floor teleoperation.
