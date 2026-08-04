@@ -5,6 +5,7 @@ from hullrakshak.applications.motion_test import (
     motion_limits_for_test,
     validate_physical_test_mode,
 )
+from hullrakshak.applications.teleop import validate_teleop_mode
 from hullrakshak.calibration import ClassifiedLineSensors, Surface
 from hullrakshak.control.assisted import (
     DecisionKind,
@@ -54,6 +55,12 @@ class MotionLimitTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             raised_limits.validate(100, 1500)
         floor_limits.validate(100, 1500)
+
+    def test_floor_teleoperation_requires_wifi(self) -> None:
+        validate_teleop_mode(transport="wifi", floor_test=True)
+        validate_teleop_mode(transport="serial", floor_test=False)
+        with self.assertRaisesRegex(ValueError, "requires untethered Wi-Fi"):
+            validate_teleop_mode(transport="serial", floor_test=True)
 
 
 class StateMachineTests(unittest.TestCase):

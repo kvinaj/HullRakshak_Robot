@@ -52,7 +52,17 @@ def build_argument_parser() -> argparse.ArgumentParser:
         type=int,
         help="PWM speed, bounded by the configured safety limit",
     )
+    parser.add_argument(
+        "--floor-test",
+        action="store_true",
+        help="Arm Wi-Fi-only floor teleoperation instead of a raised-track test",
+    )
     return parser
+
+
+def validate_teleop_mode(*, transport: str, floor_test: bool) -> None:
+    if floor_test and transport != "wifi":
+        raise ValueError("Floor teleoperation requires untethered Wi-Fi transport")
 
 
 def require_physical_safety_confirmation(
@@ -66,18 +76,26 @@ def require_physical_safety_confirmation(
         raise SystemExit("Motion control requires an interactive terminal")
     print("SAFETY CHECK")
     if floor_test:
-        reverse = direction == "backward"
-        travel_area = "behind" if reverse else "ahead"
-        cable_side = "front" if reverse else "rear"
-        print(
-            f"- Place the robot on a flat floor with at least 2 m clear {travel_area}."
-        )
+        if keyboard_controls_available:
+            print("- Center the robot on a flat floor with 2 m clear all around.")
+            cable_side = None
+        else:
+            reverse = direction == "backward"
+            travel_area = "behind" if reverse else "ahead"
+            cable_side = "front" if reverse else "rear"
+            print(
+                f"- Place the robot on a flat floor with at least 2 m clear "
+                f"{travel_area}."
+            )
         print("- Point the robot away from people, pets, stairs, and obstacles.")
         if tethered:
-            print(
-                f"- Route the USB cable toward the robot's {cable_side}, with "
-                "slack, and clear of both tracks."
-            )
+            if cable_side is None:
+                print("- Keep the USB cable outside the entire movement area.")
+            else:
+                print(
+                    f"- Route the USB cable toward the robot's {cable_side}, with "
+                    "slack, and clear of both tracks."
+                )
         else:
             print("- Confirm that no USB cable is attached to the moving robot.")
     else:
@@ -159,10 +177,19 @@ def run_terminal(
 
 def main() -> None:
     args = build_argument_parser().parse_args()
+    try:
+        validate_teleop_mode(
+            transport=args.transport,
+            floor_test=args.floor_test,
+        )
+    except ValueError as error:
+        raise SystemExit(f"Unsafe teleoperation rejected: {error}") from error
+
     if not args.arm:
+        preparation = "clear the floor area" if args.floor_test else "raise the tracks"
         raise SystemExit(
-            "Teleoperation is disarmed. Review docs/safety.md, raise the tracks, "
-            "then explicitly supply --arm."
+            f"Teleoperation is disarmed. Review docs/safety.md, {preparation}, "
+            "then supply --arm."
         )
 
     settings = apply_connection_overrides(load_settings(args.config), args)
@@ -178,7 +205,10 @@ def main() -> None:
             f"received {speed}."
         )
 
-    require_physical_safety_confirmation()
+    require_physical_safety_confirmation(
+        floor_test=args.floor_test,
+        tethered=args.transport == "serial",
+    )
     robot = connect_robot(settings, args.transport)
     try:
         with robot:

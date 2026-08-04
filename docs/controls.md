@@ -56,6 +56,20 @@ hullrakshak-teleop \
 
 Do not run this until both tracks are physically raised.
 
+After raised-track Wi-Fi keyboard control passes, floor teleoperation can be
+armed only over Wi-Fi. It uses the same self-expiring 250 ms key pulses,
+requires two metres clear all around, no attached USB cable, and typing
+`CLEAR`:
+
+```bash
+hullrakshak-teleop \
+  --transport wifi \
+  --host 192.168.4.1 \
+  --speed 100 \
+  --floor-test \
+  --arm
+```
+
 ## First movement: one pulse
 
 The first physical movement should not use keyboard control. Use the dedicated

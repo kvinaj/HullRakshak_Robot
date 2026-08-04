@@ -13,6 +13,8 @@
   separate 1500 ms ceiling. Normal motion remains capped at 500 ms.
 - Serial floor tests require safe USB-cable routing; Wi-Fi floor tests require
   confirming that no USB cable is attached to the moving robot.
+- Floor keyboard control is Wi-Fi-only, requires `--floor-test` and `CLEAR`,
+  and retains the 250 ms self-expiring pulse for every direction key.
 
 ## Before motor-control work
 

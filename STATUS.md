@@ -104,3 +104,18 @@ software differential-speed correction.
 
 Wi-Fi keyboard control must be recommissioned with raised tracks before any
 floor teleoperation.
+
+## Wi-Fi keyboard control verified on 2026-08-04
+
+- With tracks raised, Up, Down, Left, and Right produced the expected track
+  directions using 250 ms self-expiring pulses at PWM 100.
+- Every raised-track key pulse stopped automatically; Space sent stop and Q
+  sent stop and exited normally.
+- Wi-Fi-only floor teleoperation was then verified with USB disconnected,
+  `--floor-test`, and the `CLEAR` confirmation.
+- A single floor Up-arrow pulse moved and stopped correctly; Space and Q also
+  worked. The previously measured slight drivetrain drift remained present.
+- Serial floor teleoperation is intentionally rejected.
+
+Manual computer control over Wi-Fi is now commissioned. Straight-line drift
+correction remains the next control-development milestone.
