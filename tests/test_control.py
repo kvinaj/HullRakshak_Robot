@@ -38,9 +38,10 @@ class MotionLimitTests(unittest.TestCase):
         self.assertEqual(args.duration_ms, 500)
         self.assertFalse(args.floor_test)
 
-    def test_initial_floor_mode_permits_forward_only(self) -> None:
+    def test_floor_mode_permits_straight_directions_only(self) -> None:
         validate_physical_test_mode(direction="forward", floor_test=True)
-        with self.assertRaisesRegex(ValueError, "permits forward only"):
+        validate_physical_test_mode(direction="backward", floor_test=True)
+        with self.assertRaisesRegex(ValueError, "forward and backward only"):
             validate_physical_test_mode(direction="left", floor_test=True)
         validate_physical_test_mode(direction="left", floor_test=False)
 

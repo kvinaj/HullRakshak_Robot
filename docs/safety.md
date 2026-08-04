@@ -8,9 +8,9 @@
 - Python movement remains explicitly armed and time-limited.
 - Raised-track forward, backward, left, and right motion is verified at PWM 100
   for 500 ms.
-- Initial floor mode permits one forward pulse only, requires `--floor-test`,
-  requires typing `CLEAR` instead of `RAISED`, and has a separate 1500 ms
-  ceiling. Normal motion remains capped at 500 ms.
+- Floor mode permits straight forward or backward pulses only, requires
+  `--floor-test`, requires typing `CLEAR` instead of `RAISED`, and has a
+  separate 1500 ms ceiling. Normal motion remains capped at 500 ms.
 
 ## Before motor-control work
 

@@ -56,15 +56,26 @@ def build_argument_parser() -> argparse.ArgumentParser:
 
 
 def require_physical_safety_confirmation(
-    *, keyboard_controls_available: bool = True, floor_test: bool = False
+    *,
+    keyboard_controls_available: bool = True,
+    floor_test: bool = False,
+    direction: str | None = None,
 ) -> None:
     if not sys.stdin.isatty():
         raise SystemExit("Motion control requires an interactive terminal")
     print("SAFETY CHECK")
     if floor_test:
-        print("- Place the robot on a flat floor with at least 2 m clear ahead.")
+        reverse = direction == "backward"
+        travel_area = "behind" if reverse else "ahead"
+        cable_side = "front" if reverse else "rear"
+        print(
+            f"- Place the robot on a flat floor with at least 2 m clear {travel_area}."
+        )
         print("- Point the robot away from people, pets, stairs, and obstacles.")
-        print("- Keep the USB cable slack and completely clear of both tracks.")
+        print(
+            f"- Route the USB cable toward the robot's {cable_side}, with slack, "
+            "and clear of both tracks."
+        )
     else:
         print("- Both tracks must be raised clear of the bench.")
     print("- Keep the physical power switch within reach.")

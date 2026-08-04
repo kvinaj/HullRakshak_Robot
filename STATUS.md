@@ -75,3 +75,18 @@ motor-supply charge, but battery voltage was not measured directly.
 
 The slight left drift is now repeatable enough for a future measured correction;
 no correction has been applied yet. Autonomous actuation remains untested.
+
+## Reverse floor baseline verified on 2026-08-04
+
+- Three consecutive backward floor trials at PWM 100 for 1500 ms each travelled
+  approximately 20.5 cm and stopped automatically.
+- The robot showed approximately 1 cm of heading deviation in the direction
+  opposite to the forward deviation.
+- Forward and backward therefore have matching travel distance and a repeatable
+  direction-reversing bias. This is consistent with a small left/right track
+  speed mismatch; it is not evidence of random command loss.
+- Floor mode now permits forward and backward only, with direction-specific
+  clearance and USB-cable instructions. Floor turning remains prohibited.
+
+Mechanical track resistance and tension should be checked before choosing a
+software differential-speed correction.

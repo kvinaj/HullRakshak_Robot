@@ -54,15 +54,15 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--floor-test",
         action="store_true",
-        help="Arm the first controlled floor test instead of a raised-track test",
+        help="Arm a controlled straight floor test instead of a raised-track test",
     )
     return parser
 
 
 def validate_physical_test_mode(*, direction: str, floor_test: bool) -> None:
-    """Keep the initial floor milestone narrower than raised-track testing."""
-    if floor_test and direction != "forward":
-        raise ValueError("The initial floor-test mode permits forward only")
+    """Keep floor commissioning narrower than raised-track testing."""
+    if floor_test and direction not in ("forward", "backward"):
+        raise ValueError("Floor-test mode permits forward and backward only")
 
 
 def motion_limits_for_test(settings: Settings, *, floor_test: bool) -> MotionLimits:
@@ -81,9 +81,8 @@ def motion_limits_for_test(settings: Settings, *, floor_test: bool) -> MotionLim
 def main() -> None:
     args = build_argument_parser().parse_args()
     if not args.arm:
-        raise SystemExit(
-            "Motion test is disarmed. Raise both tracks and explicitly supply --arm."
-        )
+        preparation = "Clear the floor path" if args.floor_test else "Raise both tracks"
+        raise SystemExit(f"Motion test is disarmed. {preparation} and supply --arm.")
 
     try:
         validate_physical_test_mode(
@@ -103,6 +102,7 @@ def main() -> None:
     require_physical_safety_confirmation(
         keyboard_controls_available=False,
         floor_test=args.floor_test,
+        direction=args.direction,
     )
     direction = DIRECTION_NAMES[args.direction]
     robot = connect_robot(settings, args.transport, motion_limits=limits)

@@ -16,7 +16,7 @@ Default host limits:
 
 - maximum commissioning PWM: 100 out of 255;
 - maximum command duration: 500 ms;
-- explicitly armed forward-only floor-test duration: 1500 ms;
+- explicitly armed straight floor-test duration: 1500 ms;
 - keyboard pulse: 250 ms.
 
 Values outside these limits raise an exception before serial or Wi-Fi output.
@@ -78,8 +78,8 @@ backward, left, and right in separate runs.
 ## First floor movement
 
 Floor testing is a separate mode and never accepts the raised-track
-confirmation. The initial floor mode permits forward only and requires typing
-`CLEAR` after checking the clear area and USB cable route:
+confirmation. Floor mode permits forward and backward only and requires typing
+`CLEAR` after checking the direction-specific clear area and USB cable route:
 
 ```bash
 hullrakshak-pulse \
