@@ -13,7 +13,7 @@ constexpr uint8_t PIN_ULTRASONIC_ECHO = 12;
 constexpr uint8_t PIN_ULTRASONIC_TRIGGER = 13;
 
 constexpr int16_t MAX_PWM = 100;
-constexpr uint16_t MAX_MOTION_MS = 1500;
+constexpr uint16_t MAX_MOTION_MS = 3000;
 constexpr uint32_t ULTRASONIC_TIMEOUT_US = 30000;
 constexpr size_t FRAME_CAPACITY = 160;
 
@@ -54,6 +54,12 @@ void startMotion(int16_t leftPwm, int16_t rightPwm, uint16_t durationMs,
   motionStartedAt = millis();
   motionDurationMs = durationMs;
   motionActive = true;
+}
+
+bool rawMotionWithinLimits(long leftPwm, long rightPwm, long durationMs) {
+  return leftPwm >= -MAX_PWM && leftPwm <= MAX_PWM &&
+         rightPwm >= -MAX_PWM && rightPwm <= MAX_PWM && durationMs >= 1 &&
+         durationMs <= MAX_MOTION_MS;
 }
 
 void printValue(const char *label, long value) {
@@ -137,6 +143,13 @@ void handleCommand(const char *json) {
     return;
   }
 
+  // Read-only capability probe. Python must receive CAP_1 before it is allowed
+  // to send the project-specific differential motion command.
+  if (command == 41) {
+    Serial.print(F("{CAP_1}"));
+    return;
+  }
+
   if (command == 40) {
     long left = 0;
     long right = 0;
@@ -146,6 +159,11 @@ void handleCommand(const char *json) {
         !readIntegerField(json, "T", &duration)) {
       stopMotors();
       Serial.print(F("{error_motion_fields}"));
+      return;
+    }
+    if (!rawMotionWithinLimits(left, right, duration)) {
+      stopMotors();
+      Serial.print(F("{error_motion_limits}"));
       return;
     }
     startMotion(static_cast<int16_t>(left), static_cast<int16_t>(right),
@@ -166,6 +184,12 @@ void handleCommand(const char *json) {
       return;
     }
     const int direction = static_cast<int>(directionValue);
+    if (speedValue < 1 || speedValue > MAX_PWM || durationValue < 1 ||
+        durationValue > MAX_MOTION_MS) {
+      stopMotors();
+      Serial.print(F("{error_motion_limits}"));
+      return;
+    }
     const int speed = static_cast<int>(speedValue);
     int16_t left = 0;
     int16_t right = 0;

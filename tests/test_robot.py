@@ -2,7 +2,7 @@ import json
 import unittest
 
 from hullrakshak.control.motion import MotionDirection, MotionLimits
-from hullrakshak.robot import Robot
+from hullrakshak.robot import Robot, UnsupportedFirmwareError
 from hullrakshak.settings import load_settings
 from hullrakshak.transport.simulated import SimulatedTransport
 
@@ -10,8 +10,9 @@ from hullrakshak.transport.simulated import SimulatedTransport
 class FakeTransport:
     VALUES = {"L": 181, "M": 193, "R": 73, "U": 42}
 
-    def __init__(self) -> None:
+    def __init__(self, *, differential_capability: bool = False) -> None:
         self.is_open = False
+        self.differential_capability = differential_capability
         self.responses: list[str] = []
         self.commands: list[dict[str, object]] = []
 
@@ -25,6 +26,8 @@ class FakeTransport:
         command = json.loads(data)
         self.commands.append(command)
         request_id = command.get("H")
+        if command.get("N") == 41 and self.differential_capability:
+            self.responses.append("CAP_1")
         if request_id in self.VALUES:
             self.responses.append(f"{request_id}_{self.VALUES[request_id]}")
 
@@ -87,6 +90,64 @@ class RobotTests(unittest.TestCase):
                 MotionDirection.FORWARD,
                 speed=81,
                 duration_ms=250,
+            )
+
+        self.assertEqual(transport.commands, [])
+
+    def test_factory_firmware_cannot_receive_differential_motion(self) -> None:
+        transport = FakeTransport()
+        robot = Robot(
+            transport,
+            response_timeout_seconds=0.01,
+            motion_limits=MotionLimits(maximum_speed=100, maximum_duration_ms=500),
+        )
+
+        with robot:
+            self.assertFalse(robot.probe_differential_capability())
+            with self.assertRaises(UnsupportedFirmwareError):
+                robot.drive_differential_timed(
+                    left_pwm=95,
+                    right_pwm=100,
+                    duration_ms=500,
+                )
+
+        self.assertFalse(any(command["N"] == 40 for command in transport.commands))
+
+    def test_verified_candidate_encodes_bounded_differential_motion(self) -> None:
+        transport = FakeTransport(differential_capability=True)
+        robot = Robot(
+            transport,
+            response_timeout_seconds=0.1,
+            motion_limits=MotionLimits(maximum_speed=100, maximum_duration_ms=500),
+        )
+
+        with robot:
+            self.assertTrue(robot.probe_differential_capability())
+            robot.drive_differential_timed(
+                left_pwm=100,
+                right_pwm=95,
+                duration_ms=500,
+            )
+
+        self.assertIn(
+            {"N": 40, "L": 100, "R": 95, "T": 500, "H": "DMOVE"},
+            transport.commands,
+        )
+
+    def test_differential_limits_are_checked_before_capability_or_write(self) -> None:
+        transport = FakeTransport(differential_capability=True)
+        robot = Robot(
+            transport,
+            response_timeout_seconds=0.1,
+            motion_limits=MotionLimits(maximum_speed=100, maximum_duration_ms=500),
+        )
+        transport.open()
+
+        with self.assertRaises(ValueError):
+            robot.drive_differential_timed(
+                left_pwm=101,
+                right_pwm=100,
+                duration_ms=500,
             )
 
         self.assertEqual(transport.commands, [])

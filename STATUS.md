@@ -119,3 +119,26 @@ floor teleoperation.
 
 Manual computer control over Wi-Fi is now commissioned. Straight-line drift
 correction remains the next control-development milestone.
+
+## Differential firmware candidate compiled on 2026-08-04
+
+- The inactive UNO candidate preserves `N=2`, `N=21`, `N=22`, and `N=100`.
+- It adds a read-only `N=41` capability probe and locally time-limited signed
+  left/right PWM command `N=40`.
+- Raw signed PWM and duration fields are range-checked before conversion.
+- The candidate compiles for Arduino UNO using 7,046 bytes (21%) of flash and
+  394 bytes (19%) of RAM.
+- Nothing was uploaded; the robot remains on the verified factory firmware.
+
+Python capability detection and refusal-by-default are now implemented:
+
+- `probe_differential_capability()` sends read-only `N=41` and enables the
+  capability only after receiving exact frame `{CAP_1}` on that connection.
+- Opening or closing a connection clears the verified capability.
+- `drive_differential_timed()` validates signed PWM and duration first, then
+  refuses to write `N=40` unless the current connection passed the probe.
+- Automated tests prove a factory-like transport never receives `N=40`, while
+  a verified candidate receives the exact bounded differential frame.
+
+The next gate is a read-only probe against the currently installed factory
+firmware. No candidate upload or differential motor test has occurred.

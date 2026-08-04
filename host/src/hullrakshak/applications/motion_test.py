@@ -11,7 +11,10 @@ from hullrakshak.applications.common import (
     apply_connection_overrides,
     connect_robot,
 )
-from hullrakshak.applications.teleop import require_physical_safety_confirmation
+from hullrakshak.applications.teleop import (
+    require_physical_safety_confirmation,
+    send_manual_pulse,
+)
 from hullrakshak.control.motion import MotionDirection, MotionLimits
 from hullrakshak.settings import DEFAULT_CONFIG_PATH, Settings, load_settings
 from hullrakshak.transport.base import RobotConnectionError
@@ -106,18 +109,36 @@ def main() -> None:
         tethered=args.transport == "serial",
     )
     direction = DIRECTION_NAMES[args.direction]
+    forward_trim = None
+    if direction == MotionDirection.FORWARD and settings.drive.forward_trim_enabled:
+        if args.speed != settings.drive.forward_left_pwm:
+            raise SystemExit(
+                "Forward trim is calibrated only at speed "
+                f"{settings.drive.forward_left_pwm}; received {args.speed}."
+            )
+        forward_trim = (
+            settings.drive.forward_left_pwm,
+            settings.drive.forward_right_pwm,
+        )
     robot = connect_robot(settings, args.transport, motion_limits=limits)
 
     try:
         with robot:
+            if forward_trim is not None and not robot.probe_differential_capability():
+                raise SystemExit(
+                    "Forward trim refused: differential firmware capability "
+                    "was not verified."
+                )
             print(
                 f"Sending one {args.direction} pulse: "
                 f"speed={args.speed}, duration={args.duration_ms} ms"
             )
-            robot.drive_timed(
+            send_manual_pulse(
+                robot,
                 direction,
                 speed=args.speed,
                 duration_ms=args.duration_ms,
+                forward_trim=forward_trim,
             )
             time.sleep(args.duration_ms / 1000 + 0.25)
             robot.stop()

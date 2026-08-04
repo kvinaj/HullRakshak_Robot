@@ -5,7 +5,7 @@ from hullrakshak.applications.motion_test import (
     motion_limits_for_test,
     validate_physical_test_mode,
 )
-from hullrakshak.applications.teleop import validate_teleop_mode
+from hullrakshak.applications.teleop import send_manual_pulse, validate_teleop_mode
 from hullrakshak.calibration import ClassifiedLineSensors, Surface
 from hullrakshak.control.assisted import (
     DecisionKind,
@@ -31,7 +31,14 @@ class MotionLimitTests(unittest.TestCase):
         self.assertEqual(settings.safety.maximum_initial_speed, 100)
         self.assertEqual(settings.safety.maximum_command_duration_ms, 500)
         self.assertEqual(settings.safety.maximum_floor_test_duration_ms, 1500)
+        self.assertEqual(
+            settings.safety.maximum_differential_floor_test_duration_ms,
+            3000,
+        )
         self.assertEqual(settings.safety.teleop_pulse_duration_ms, 250)
+        self.assertTrue(settings.drive.forward_trim_enabled)
+        self.assertEqual(settings.drive.forward_left_pwm, 100)
+        self.assertEqual(settings.drive.forward_right_pwm, 87)
 
     def test_one_shot_defaults_match_verified_raised_track_pulse(self) -> None:
         args = build_argument_parser().parse_args(["--direction", "forward"])
@@ -61,6 +68,50 @@ class MotionLimitTests(unittest.TestCase):
         validate_teleop_mode(transport="serial", floor_test=False)
         with self.assertRaisesRegex(ValueError, "requires untethered Wi-Fi"):
             validate_teleop_mode(transport="serial", floor_test=True)
+
+    def test_forward_trim_uses_differential_motion_only_for_forward(self) -> None:
+        class FakeRobot:
+            def __init__(self) -> None:
+                self.calls: list[tuple[object, ...]] = []
+
+            def drive_timed(
+                self,
+                direction: MotionDirection,
+                *,
+                speed: int,
+                duration_ms: int,
+            ) -> None:
+                self.calls.append(("timed", direction, speed, duration_ms))
+
+            def drive_differential_timed(
+                self, *, left_pwm: int, right_pwm: int, duration_ms: int
+            ) -> None:
+                self.calls.append(
+                    ("differential", left_pwm, right_pwm, duration_ms)
+                )
+
+        robot = FakeRobot()
+        send_manual_pulse(
+            robot,
+            MotionDirection.FORWARD,
+            speed=100,
+            duration_ms=250,
+            forward_trim=(100, 87),
+        )
+        send_manual_pulse(
+            robot,
+            MotionDirection.BACKWARD,
+            speed=100,
+            duration_ms=250,
+            forward_trim=(100, 87),
+        )
+        self.assertEqual(
+            robot.calls,
+            [
+                ("differential", 100, 87, 250),
+                ("timed", MotionDirection.BACKWARD, 100, 250),
+            ],
+        )
 
 
 class StateMachineTests(unittest.TestCase):

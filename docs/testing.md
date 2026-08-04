@@ -44,3 +44,17 @@ delay, sends a startup stop, then sends the fixed factory command `N=2`, forward
 speed 80, and 500 ms. It prints timestamped raw transmitted and received bytes,
 plus complete brace-delimited frames, for three seconds. A final `N=100` stop is
 sent on normal exit, exception, or Ctrl+C before the serial port is closed.
+
+## Differential raised-track diagnostic
+
+`hullrakshak-differential-pulse` validates signed left/right PWM and duration,
+requires `--arm` plus the interactive `RAISED` confirmation, and probes `N=41`
+before sending any `N=40` frame. Factory firmware is refused. Startup, normal
+exit, exceptions, and Ctrl+C all pass through a stop-on-close robot context.
+
+After an asymmetric pair passes with raised tracks, `--floor-test` permits only
+same-sign, nonzero PWM on both tracks for straight forward or reverse travel.
+It uses a separate 3000 ms differential calibration ceiling and requires the
+direction-specific `CLEAR` confirmation. Mixed signs and zero-track commands
+are rejected. Normal floor pulses remain capped at 1500 ms and raised-track
+pulses at 500 ms.

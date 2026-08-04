@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import time
 
-from hullrakshak.control.motion import MotionDirection, MotionLimits, TimedMotion
+from hullrakshak.control.motion import (
+    DifferentialTimedMotion,
+    MotionDirection,
+    MotionLimits,
+    TimedMotion,
+)
 from hullrakshak.protocol import encode_command, parse_labeled_integer
 from hullrakshak.sensors.line import LineSensorReadings
 from hullrakshak.settings import Settings
@@ -13,6 +18,10 @@ from hullrakshak.transport.base import Transport
 from hullrakshak.transport.serial import SerialTransport
 from hullrakshak.transport.simulated import SimulatedTransport
 from hullrakshak.transport.wifi import WifiTransport
+
+
+class UnsupportedFirmwareError(RuntimeError):
+    """Raised before a command unsupported by the connected UNO is written."""
 
 
 class Robot:
@@ -29,6 +38,7 @@ class Robot:
         self.transport = transport
         self.response_timeout_seconds = response_timeout_seconds
         self.motion_limits = motion_limits
+        self._differential_capability_verified = False
 
     @classmethod
     def connect_serial(
@@ -70,6 +80,7 @@ class Robot:
         )
 
     def open(self) -> None:
+        self._differential_capability_verified = False
         self.transport.open()
         try:
             self.stop()
@@ -81,6 +92,7 @@ class Robot:
         try:
             self.stop()
         finally:
+            self._differential_capability_verified = False
             self.transport.close()
 
     def __enter__(self) -> "Robot":
@@ -111,6 +123,49 @@ class Robot:
                 parameters={
                     "D1": int(direction),
                     "D2": speed,
+                    "T": duration_ms,
+                },
+            )
+        )
+
+    def probe_differential_capability(self) -> bool:
+        """Verify the custom UNO handshake without sending a motion command."""
+        self._differential_capability_verified = False
+        self.transport.write(encode_command(41, request_id="CAP"))
+        deadline = time.monotonic() + self.response_timeout_seconds
+        while time.monotonic() < deadline:
+            remaining = max(0.01, deadline - time.monotonic())
+            try:
+                frame = self.transport.read_frame(remaining)
+            except TimeoutError:
+                return False
+            if frame == "CAP_1":
+                self._differential_capability_verified = True
+                return True
+        return False
+
+    def drive_differential_timed(
+        self,
+        *,
+        left_pwm: int,
+        right_pwm: int,
+        duration_ms: int,
+    ) -> None:
+        """Send N=40 only after the current connection passed the N=41 probe."""
+        motion = DifferentialTimedMotion(left_pwm, right_pwm, duration_ms)
+        motion.validate(self.motion_limits)
+        if not self._differential_capability_verified:
+            raise UnsupportedFirmwareError(
+                "Differential motion refused: N=41 capability was not verified "
+                "on the current connection"
+            )
+        self.transport.write(
+            encode_command(
+                40,
+                request_id="DMOVE",
+                parameters={
+                    "L": left_pwm,
+                    "R": right_pwm,
                     "T": duration_ms,
                 },
             )

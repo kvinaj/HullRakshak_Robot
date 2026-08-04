@@ -37,8 +37,16 @@ class SafetySettings:
     maximum_initial_speed: int
     maximum_command_duration_ms: int
     maximum_floor_test_duration_ms: int
+    maximum_differential_floor_test_duration_ms: int
     teleop_pulse_duration_ms: int
     obstacle_stop_distance_cm: int
+
+
+@dataclass(frozen=True)
+class DriveSettings:
+    forward_trim_enabled: bool
+    forward_left_pwm: int
+    forward_right_pwm: int
 
 
 @dataclass(frozen=True)
@@ -47,6 +55,7 @@ class Settings:
     monitor: MonitorSettings
     wifi: WifiSettings
     safety: SafetySettings
+    drive: DriveSettings
 
 
 def load_settings(path: Path = DEFAULT_CONFIG_PATH) -> Settings:
@@ -81,11 +90,19 @@ def load_settings(path: Path = DEFAULT_CONFIG_PATH) -> Settings:
             maximum_floor_test_duration_ms=int(
                 raw["safety"]["maximum_floor_test_duration_ms"]
             ),
+            maximum_differential_floor_test_duration_ms=int(
+                raw["safety"]["maximum_differential_floor_test_duration_ms"]
+            ),
             teleop_pulse_duration_ms=int(
                 raw["safety"]["teleop_pulse_duration_ms"]
             ),
             obstacle_stop_distance_cm=int(
                 raw["safety"]["obstacle_stop_distance_cm"]
             ),
+        ),
+        drive=DriveSettings(
+            forward_trim_enabled=bool(raw["drive"]["forward_trim_enabled"]),
+            forward_left_pwm=int(raw["drive"]["forward_left_pwm"]),
+            forward_right_pwm=int(raw["drive"]["forward_right_pwm"]),
         ),
     )

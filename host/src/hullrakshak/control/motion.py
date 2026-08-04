@@ -44,3 +44,29 @@ class TimedMotion:
 
     def validate(self, limits: MotionLimits) -> None:
         limits.validate(self.speed, self.duration_ms)
+
+
+@dataclass(frozen=True)
+class DifferentialTimedMotion:
+    left_pwm: int
+    right_pwm: int
+    duration_ms: int
+
+    def validate(self, limits: MotionLimits) -> None:
+        if not -limits.maximum_speed <= self.left_pwm <= limits.maximum_speed:
+            raise ValueError(
+                f"left_pwm must be within {-limits.maximum_speed}.."
+                f"{limits.maximum_speed}; received {self.left_pwm}"
+            )
+        if not -limits.maximum_speed <= self.right_pwm <= limits.maximum_speed:
+            raise ValueError(
+                f"right_pwm must be within {-limits.maximum_speed}.."
+                f"{limits.maximum_speed}; received {self.right_pwm}"
+            )
+        if self.left_pwm == 0 and self.right_pwm == 0:
+            raise ValueError("differential motion cannot command both tracks to zero")
+        if not 1 <= self.duration_ms <= limits.maximum_duration_ms:
+            raise ValueError(
+                f"duration_ms must be within 1..{limits.maximum_duration_ms}; "
+                f"received {self.duration_ms}"
+            )

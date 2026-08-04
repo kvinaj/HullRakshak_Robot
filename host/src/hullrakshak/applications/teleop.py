@@ -7,6 +7,7 @@ import curses
 import sys
 import time
 from pathlib import Path
+from typing import Protocol
 
 from hullrakshak.applications.common import (
     add_connection_arguments,
@@ -17,6 +18,34 @@ from hullrakshak.control.motion import MotionDirection
 from hullrakshak.control.state import RobotMode, RobotStateMachine
 from hullrakshak.settings import DEFAULT_CONFIG_PATH, load_settings
 from hullrakshak.transport.base import RobotConnectionError
+
+
+class ManualMotionRobot(Protocol):
+    def drive_timed(
+        self, direction: MotionDirection, *, speed: int, duration_ms: int
+    ) -> None: ...
+    def drive_differential_timed(
+        self, *, left_pwm: int, right_pwm: int, duration_ms: int
+    ) -> None: ...
+
+
+def send_manual_pulse(
+    robot: ManualMotionRobot,
+    direction: MotionDirection,
+    *,
+    speed: int,
+    duration_ms: int,
+    forward_trim: tuple[int, int] | None,
+) -> None:
+    if direction == MotionDirection.FORWARD and forward_trim is not None:
+        left_pwm, right_pwm = forward_trim
+        robot.drive_differential_timed(
+            left_pwm=left_pwm,
+            right_pwm=right_pwm,
+            duration_ms=duration_ms,
+        )
+        return
+    robot.drive_timed(direction, speed=speed, duration_ms=duration_ms)
 
 
 KEY_DIRECTIONS = {
@@ -117,10 +146,10 @@ def run_terminal(
     robot: object,
     speed: int,
     pulse_duration_ms: int,
+    forward_trim: tuple[int, int] | None = None,
 ) -> None:
     # The object is a Robot at runtime. Keeping the annotation generic makes this
     # loop easy to substitute in future UI testing.
-    drive_timed = getattr(robot, "drive_timed")
     stop = getattr(robot, "stop")
 
     screen.nodelay(True)
@@ -156,10 +185,12 @@ def run_terminal(
                 status = "emergency stop sent"
             elif key in KEY_DIRECTIONS and now - last_command_time >= 0.08:
                 direction = KEY_DIRECTIONS[key]
-                drive_timed(
+                send_manual_pulse(
+                    robot,
                     direction,
                     speed=speed,
                     duration_ms=pulse_duration_ms,
+                    forward_trim=forward_trim,
                 )
                 last_command_time = now
                 status = f"{direction.name.lower()} pulse sent"
@@ -204,6 +235,17 @@ def main() -> None:
             f"Speed must be 1..{settings.safety.maximum_initial_speed}; "
             f"received {speed}."
         )
+    forward_trim = None
+    if settings.drive.forward_trim_enabled:
+        if speed != settings.drive.forward_left_pwm:
+            raise SystemExit(
+                "Forward trim is calibrated only at speed "
+                f"{settings.drive.forward_left_pwm}; received {speed}."
+            )
+        forward_trim = (
+            settings.drive.forward_left_pwm,
+            settings.drive.forward_right_pwm,
+        )
 
     require_physical_safety_confirmation(
         floor_test=args.floor_test,
@@ -212,11 +254,17 @@ def main() -> None:
     robot = connect_robot(settings, args.transport)
     try:
         with robot:
+            if forward_trim is not None and not robot.probe_differential_capability():
+                raise SystemExit(
+                    "Forward trim refused: differential firmware capability "
+                    "was not verified."
+                )
             curses.wrapper(
                 run_terminal,
                 robot=robot,
                 speed=speed,
                 pulse_duration_ms=settings.safety.teleop_pulse_duration_ms,
+                forward_trim=forward_trim,
             )
     except KeyboardInterrupt:
         print("\nStopped safely.")
