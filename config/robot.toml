@@ -22,5 +22,6 @@ response_timeout_seconds = 2.5
 [safety]
 maximum_initial_speed = 100
 maximum_command_duration_ms = 500
+maximum_floor_test_duration_ms = 1500
 teleop_pulse_duration_ms = 250
 obstacle_stop_distance_cm = 15

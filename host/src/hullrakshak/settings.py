@@ -36,6 +36,7 @@ class WifiSettings:
 class SafetySettings:
     maximum_initial_speed: int
     maximum_command_duration_ms: int
+    maximum_floor_test_duration_ms: int
     teleop_pulse_duration_ms: int
     obstacle_stop_distance_cm: int
 
@@ -76,6 +77,9 @@ def load_settings(path: Path = DEFAULT_CONFIG_PATH) -> Settings:
             maximum_initial_speed=int(raw["safety"]["maximum_initial_speed"]),
             maximum_command_duration_ms=int(
                 raw["safety"]["maximum_command_duration_ms"]
+            ),
+            maximum_floor_test_duration_ms=int(
+                raw["safety"]["maximum_floor_test_duration_ms"]
             ),
             teleop_pulse_duration_ms=int(
                 raw["safety"]["teleop_pulse_duration_ms"]

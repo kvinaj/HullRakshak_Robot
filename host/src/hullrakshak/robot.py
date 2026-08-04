@@ -31,33 +31,39 @@ class Robot:
         self.motion_limits = motion_limits
 
     @classmethod
-    def connect_serial(cls, settings: Settings) -> "Robot":
+    def connect_serial(
+        cls, settings: Settings, motion_limits: MotionLimits | None = None
+    ) -> "Robot":
         return cls(
             SerialTransport(settings.serial),
             response_timeout_seconds=settings.serial.response_timeout_seconds,
-            motion_limits=MotionLimits(
+            motion_limits=motion_limits or MotionLimits(
                 maximum_speed=settings.safety.maximum_initial_speed,
                 maximum_duration_ms=settings.safety.maximum_command_duration_ms,
             ),
         )
 
     @classmethod
-    def connect_wifi(cls, settings: Settings) -> "Robot":
+    def connect_wifi(
+        cls, settings: Settings, motion_limits: MotionLimits | None = None
+    ) -> "Robot":
         return cls(
             WifiTransport(settings.wifi),
             response_timeout_seconds=settings.wifi.response_timeout_seconds,
-            motion_limits=MotionLimits(
+            motion_limits=motion_limits or MotionLimits(
                 maximum_speed=settings.safety.maximum_initial_speed,
                 maximum_duration_ms=settings.safety.maximum_command_duration_ms,
             ),
         )
 
     @classmethod
-    def connect_simulated(cls, settings: Settings) -> "Robot":
+    def connect_simulated(
+        cls, settings: Settings, motion_limits: MotionLimits | None = None
+    ) -> "Robot":
         return cls(
             SimulatedTransport(),
             response_timeout_seconds=0.1,
-            motion_limits=MotionLimits(
+            motion_limits=motion_limits or MotionLimits(
                 maximum_speed=settings.safety.maximum_initial_speed,
                 maximum_duration_ms=settings.safety.maximum_command_duration_ms,
             ),

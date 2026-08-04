@@ -58,4 +58,20 @@ The earlier intermittent pivot behavior occurred before charging and did not
 recur in this four-direction sequence. This is consistent with insufficient
 motor-supply charge, but battery voltage was not measured directly.
 
-Floor operation and autonomous actuation remain untested.
+## Initial floor tests verified on 2026-08-04
+
+- One forward floor pulse at PWM 100 for 500 ms moved approximately 10 cm,
+  curved very slightly left, and stopped automatically.
+- A separately armed forward-only floor pulse at PWM 100 for 1500 ms moved
+  approximately 20 cm, ended about 1 cm left of the projected straight line,
+  and stopped automatically.
+- Three consecutive 1500 ms repeatability trials each travelled approximately
+  20.5 cm, placed the front about 1 cm left of the projected straight line, and
+  stopped automatically. The repeatable heading deviation is approximately
+  2.8 degrees over 20.5 cm.
+- The longer floor-test ceiling is isolated from normal motion: floor mode is
+  capped at 1500 ms while normal and raised-track motion remain capped at
+  500 ms.
+
+The slight left drift is now repeatable enough for a future measured correction;
+no correction has been applied yet. Autonomous actuation remains untested.

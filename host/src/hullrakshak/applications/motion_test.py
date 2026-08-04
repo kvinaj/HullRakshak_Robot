@@ -1,4 +1,4 @@
-"""One-shot, raised-track motion validation."""
+"""One-shot raised-track or explicitly armed floor-motion validation."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from hullrakshak.applications.common import (
 )
 from hullrakshak.applications.teleop import require_physical_safety_confirmation
 from hullrakshak.control.motion import MotionDirection, MotionLimits
-from hullrakshak.settings import DEFAULT_CONFIG_PATH, load_settings
+from hullrakshak.settings import DEFAULT_CONFIG_PATH, Settings, load_settings
 from hullrakshak.transport.base import RobotConnectionError
 
 
@@ -51,7 +51,31 @@ def build_argument_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Acknowledge that one hardware movement pulse is intended",
     )
+    parser.add_argument(
+        "--floor-test",
+        action="store_true",
+        help="Arm the first controlled floor test instead of a raised-track test",
+    )
     return parser
+
+
+def validate_physical_test_mode(*, direction: str, floor_test: bool) -> None:
+    """Keep the initial floor milestone narrower than raised-track testing."""
+    if floor_test and direction != "forward":
+        raise ValueError("The initial floor-test mode permits forward only")
+
+
+def motion_limits_for_test(settings: Settings, *, floor_test: bool) -> MotionLimits:
+    safety = settings.safety
+    maximum_duration_ms = (
+        safety.maximum_floor_test_duration_ms
+        if floor_test
+        else safety.maximum_command_duration_ms
+    )
+    return MotionLimits(
+        maximum_speed=safety.maximum_initial_speed,
+        maximum_duration_ms=maximum_duration_ms,
+    )
 
 
 def main() -> None:
@@ -61,19 +85,27 @@ def main() -> None:
             "Motion test is disarmed. Raise both tracks and explicitly supply --arm."
         )
 
+    try:
+        validate_physical_test_mode(
+            direction=args.direction,
+            floor_test=args.floor_test,
+        )
+    except ValueError as error:
+        raise SystemExit(f"Unsafe physical test rejected: {error}") from error
+
     settings = apply_connection_overrides(load_settings(args.config), args)
-    limits = MotionLimits(
-        maximum_speed=settings.safety.maximum_initial_speed,
-        maximum_duration_ms=settings.safety.maximum_command_duration_ms,
-    )
+    limits = motion_limits_for_test(settings, floor_test=args.floor_test)
     try:
         limits.validate(args.speed, args.duration_ms)
     except ValueError as error:
         raise SystemExit(f"Unsafe motion request rejected: {error}") from error
 
-    require_physical_safety_confirmation(keyboard_controls_available=False)
+    require_physical_safety_confirmation(
+        keyboard_controls_available=False,
+        floor_test=args.floor_test,
+    )
     direction = DIRECTION_NAMES[args.direction]
-    robot = connect_robot(settings, args.transport)
+    robot = connect_robot(settings, args.transport, motion_limits=limits)
 
     try:
         with robot:

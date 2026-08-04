@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import replace
 
+from hullrakshak.control.motion import MotionLimits
 from hullrakshak.robot import Robot
 from hullrakshak.settings import Settings
 
@@ -36,9 +37,14 @@ def apply_connection_overrides(
     return settings
 
 
-def connect_robot(settings: Settings, transport_name: str) -> Robot:
+def connect_robot(
+    settings: Settings,
+    transport_name: str,
+    *,
+    motion_limits: MotionLimits | None = None,
+) -> Robot:
     if transport_name == "wifi":
-        return Robot.connect_wifi(settings)
+        return Robot.connect_wifi(settings, motion_limits)
     if transport_name == "simulated":
-        return Robot.connect_simulated(settings)
-    return Robot.connect_serial(settings)
+        return Robot.connect_simulated(settings, motion_limits)
+    return Robot.connect_serial(settings, motion_limits)

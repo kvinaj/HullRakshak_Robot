@@ -6,8 +6,11 @@
 - Keep the Upload/Cam switch in `Upload` for direct USB communication.
 - The sensor monitor sends `N=100` when opening and closing the connection.
 - Python movement remains explicitly armed and time-limited.
-- Raised-track forward motion is verified at PWM 100 for 500 ms.
-- Backward and turning directions still require sequential raised-track checks.
+- Raised-track forward, backward, left, and right motion is verified at PWM 100
+  for 500 ms.
+- Initial floor mode permits one forward pulse only, requires `--floor-test`,
+  requires typing `CLEAR` instead of `RAISED`, and has a separate 1500 ms
+  ceiling. Normal motion remains capped at 500 ms.
 
 ## Before motor-control work
 

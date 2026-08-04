@@ -56,19 +56,25 @@ def build_argument_parser() -> argparse.ArgumentParser:
 
 
 def require_physical_safety_confirmation(
-    *, keyboard_controls_available: bool = True
+    *, keyboard_controls_available: bool = True, floor_test: bool = False
 ) -> None:
     if not sys.stdin.isatty():
         raise SystemExit("Motion control requires an interactive terminal")
     print("SAFETY CHECK")
-    print("- Both tracks must be raised clear of the bench.")
+    if floor_test:
+        print("- Place the robot on a flat floor with at least 2 m clear ahead.")
+        print("- Point the robot away from people, pets, stairs, and obstacles.")
+        print("- Keep the USB cable slack and completely clear of both tracks.")
+    else:
+        print("- Both tracks must be raised clear of the bench.")
     print("- Keep the physical power switch within reach.")
     if keyboard_controls_available:
         print("- Space and Q command an immediate stop.")
     else:
         print("- The program will send stop after the single pulse.")
-    confirmation = input("Type RAISED to arm motion: ").strip()
-    if confirmation != "RAISED":
+    expected = "CLEAR" if floor_test else "RAISED"
+    confirmation = input(f"Type {expected} to arm motion: ").strip()
+    if confirmation != expected:
         raise SystemExit("Not armed; no movement command was sent.")
 
 

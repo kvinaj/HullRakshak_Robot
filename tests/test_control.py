@@ -1,6 +1,10 @@
 import unittest
 
-from hullrakshak.applications.motion_test import build_argument_parser
+from hullrakshak.applications.motion_test import (
+    build_argument_parser,
+    motion_limits_for_test,
+    validate_physical_test_mode,
+)
 from hullrakshak.calibration import ClassifiedLineSensors, Surface
 from hullrakshak.control.assisted import (
     DecisionKind,
@@ -25,12 +29,30 @@ class MotionLimitTests(unittest.TestCase):
         settings = load_settings()
         self.assertEqual(settings.safety.maximum_initial_speed, 100)
         self.assertEqual(settings.safety.maximum_command_duration_ms, 500)
+        self.assertEqual(settings.safety.maximum_floor_test_duration_ms, 1500)
         self.assertEqual(settings.safety.teleop_pulse_duration_ms, 250)
 
     def test_one_shot_defaults_match_verified_raised_track_pulse(self) -> None:
         args = build_argument_parser().parse_args(["--direction", "forward"])
         self.assertEqual(args.speed, 100)
         self.assertEqual(args.duration_ms, 500)
+        self.assertFalse(args.floor_test)
+
+    def test_initial_floor_mode_permits_forward_only(self) -> None:
+        validate_physical_test_mode(direction="forward", floor_test=True)
+        with self.assertRaisesRegex(ValueError, "permits forward only"):
+            validate_physical_test_mode(direction="left", floor_test=True)
+        validate_physical_test_mode(direction="left", floor_test=False)
+
+    def test_floor_mode_has_a_separate_duration_ceiling(self) -> None:
+        settings = load_settings()
+        raised_limits = motion_limits_for_test(settings, floor_test=False)
+        floor_limits = motion_limits_for_test(settings, floor_test=True)
+        self.assertEqual(raised_limits.maximum_duration_ms, 500)
+        self.assertEqual(floor_limits.maximum_duration_ms, 1500)
+        with self.assertRaises(ValueError):
+            raised_limits.validate(100, 1500)
+        floor_limits.validate(100, 1500)
 
 
 class StateMachineTests(unittest.TestCase):
