@@ -44,5 +44,18 @@
 - The normal `hullrakshak-pulse` Python path repeated that physical result.
 - The active commissioning limit is therefore PWM 100 and 500 ms.
 
-Raised-track backward and turning pulses must be reverified next, one direction
-at a time. Floor operation and autonomous actuation remain untested.
+## Direction tests verified on 2026-08-04
+
+After fully charging the robot batteries, one bounded raised-track test passed
+in each direction at PWM 100 for 500 ms:
+
+- forward: both tracks forward, then automatic stop;
+- backward: both tracks backward, then automatic stop;
+- left: right track forward and left track backward, then automatic stop;
+- right: left track forward and right track backward, then automatic stop.
+
+The earlier intermittent pivot behavior occurred before charging and did not
+recur in this four-direction sequence. This is consistent with insufficient
+motor-supply charge, but battery voltage was not measured directly.
+
+Floor operation and autonomous actuation remain untested.
