@@ -28,6 +28,21 @@ Hardware tests are sequential:
 Passing a later software test never substitutes for the preceding physical
 safety test.
 
+## Stationary obstacle guard
+
+The obstacle guard reads telemetry and prints `CLEAR` above the configured
+15 cm threshold or `STOP` at and below it. A zero or missing echo is treated as
+`STOP` rather than assumed clear. It opens and closes through the normal robot
+context, which commands the motors to stop, and it never sends motion commands.
+
+```bash
+hullrakshak-obstacle-guard \
+  --transport serial \
+  --port /dev/cu.usbserial-10
+```
+
+Use `Ctrl+C` to exit.
+
 ## Raw timed-motion diagnostic
 
 Use only with both tracks securely raised and the physical power switch within

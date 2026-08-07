@@ -14,6 +14,7 @@ dependencies = [
 [project.scripts]
 hullrakshak-calibrate = "hullrakshak.applications.calibrate:main"
 hullrakshak-differential-pulse = "hullrakshak.applications.differential_pulse:main"
+hullrakshak-obstacle-guard = "hullrakshak.applications.obstacle_guard:main"
 hullrakshak-pulse = "hullrakshak.applications.motion_test:main"
 hullrakshak-serial-diagnostic = "hullrakshak.applications.serial_diagnostic:main"
 hullrakshak-sensors = "hullrakshak.applications.sensor_monitor:main"

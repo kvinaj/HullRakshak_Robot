@@ -110,6 +110,7 @@ def main() -> None:
     )
     direction = DIRECTION_NAMES[args.direction]
     forward_trim = None
+    reverse_trim = None
     if direction == MotionDirection.FORWARD and settings.drive.forward_trim_enabled:
         if args.speed != settings.drive.forward_left_pwm:
             raise SystemExit(
@@ -120,13 +121,24 @@ def main() -> None:
             settings.drive.forward_left_pwm,
             settings.drive.forward_right_pwm,
         )
+    if direction == MotionDirection.BACKWARD and settings.drive.reverse_trim_enabled:
+        if args.speed != abs(settings.drive.reverse_left_pwm):
+            raise SystemExit(
+                "Reverse trim is calibrated only at speed "
+                f"{abs(settings.drive.reverse_left_pwm)}; received {args.speed}."
+            )
+        reverse_trim = (
+            settings.drive.reverse_left_pwm,
+            settings.drive.reverse_right_pwm,
+        )
     robot = connect_robot(settings, args.transport, motion_limits=limits)
 
     try:
         with robot:
-            if forward_trim is not None and not robot.probe_differential_capability():
+            trim_configured = forward_trim is not None or reverse_trim is not None
+            if trim_configured and not robot.probe_differential_capability():
                 raise SystemExit(
-                    "Forward trim refused: differential firmware capability "
+                    "Drive trim refused: differential firmware capability "
                     "was not verified."
                 )
             print(
@@ -139,6 +151,7 @@ def main() -> None:
                 speed=args.speed,
                 duration_ms=args.duration_ms,
                 forward_trim=forward_trim,
+                reverse_trim=reverse_trim,
             )
             time.sleep(args.duration_ms / 1000 + 0.25)
             robot.stop()

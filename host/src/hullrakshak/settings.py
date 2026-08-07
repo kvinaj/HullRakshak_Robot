@@ -47,6 +47,9 @@ class DriveSettings:
     forward_trim_enabled: bool
     forward_left_pwm: int
     forward_right_pwm: int
+    reverse_trim_enabled: bool
+    reverse_left_pwm: int
+    reverse_right_pwm: int
 
 
 @dataclass(frozen=True)
@@ -104,5 +107,8 @@ def load_settings(path: Path = DEFAULT_CONFIG_PATH) -> Settings:
             forward_trim_enabled=bool(raw["drive"]["forward_trim_enabled"]),
             forward_left_pwm=int(raw["drive"]["forward_left_pwm"]),
             forward_right_pwm=int(raw["drive"]["forward_right_pwm"]),
+            reverse_trim_enabled=bool(raw["drive"]["reverse_trim_enabled"]),
+            reverse_left_pwm=int(raw["drive"]["reverse_left_pwm"]),
+            reverse_right_pwm=int(raw["drive"]["reverse_right_pwm"]),
         ),
     )

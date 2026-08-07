@@ -142,3 +142,23 @@ Python capability detection and refusal-by-default are now implemented:
 
 The next gate is a read-only probe against the currently installed factory
 firmware. No candidate upload or differential motor test has occurred.
+
+## Differential control and obstacle guard verified by 2026-08-07
+
+- The custom UNO firmware was uploaded, and its `{CAP_1}` capability response
+  and bounded differential command were physically verified.
+- Straight-motion calibration is left PWM 100 and right PWM 86. Forward uses
+  `100/86`; reverse uses the signed pair `-100/-86`.
+- Normal cabled Python forward and reverse floor pulses used those calibrated
+  values successfully and stopped automatically. The corresponding calibrated
+  Wi-Fi commands have not been physically repeated after the final change.
+- Ultrasonic measurements were approximately 219 cm with an open path, 19 cm
+  for an object placed at 20 cm, and 9 cm for an object placed at 10 cm.
+- The stationary obstacle guard was physically verified: repeated 9 cm readings
+  produced `STOP`, while 33--38 cm readings produced `CLEAR`, using the
+  configured 15 cm threshold.
+- The diagnostic remains read-only: it commands stop on connection entry and
+  exit and never sends a movement command.
+
+The next safety gate is an explicitly armed, bounded assisted-forward test that
+checks the ultrasonic distance before permitting a single motion pulse.

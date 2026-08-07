@@ -36,9 +36,15 @@ def send_manual_pulse(
     speed: int,
     duration_ms: int,
     forward_trim: tuple[int, int] | None,
+    reverse_trim: tuple[int, int] | None,
 ) -> None:
-    if direction == MotionDirection.FORWARD and forward_trim is not None:
-        left_pwm, right_pwm = forward_trim
+    trim = None
+    if direction == MotionDirection.FORWARD:
+        trim = forward_trim
+    elif direction == MotionDirection.BACKWARD:
+        trim = reverse_trim
+    if trim is not None:
+        left_pwm, right_pwm = trim
         robot.drive_differential_timed(
             left_pwm=left_pwm,
             right_pwm=right_pwm,
@@ -147,6 +153,7 @@ def run_terminal(
     speed: int,
     pulse_duration_ms: int,
     forward_trim: tuple[int, int] | None = None,
+    reverse_trim: tuple[int, int] | None = None,
 ) -> None:
     # The object is a Robot at runtime. Keeping the annotation generic makes this
     # loop easy to substitute in future UI testing.
@@ -191,6 +198,7 @@ def run_terminal(
                     speed=speed,
                     duration_ms=pulse_duration_ms,
                     forward_trim=forward_trim,
+                    reverse_trim=reverse_trim,
                 )
                 last_command_time = now
                 status = f"{direction.name.lower()} pulse sent"
@@ -246,6 +254,17 @@ def main() -> None:
             settings.drive.forward_left_pwm,
             settings.drive.forward_right_pwm,
         )
+    reverse_trim = None
+    if settings.drive.reverse_trim_enabled:
+        if speed != abs(settings.drive.reverse_left_pwm):
+            raise SystemExit(
+                "Reverse trim is calibrated only at speed "
+                f"{abs(settings.drive.reverse_left_pwm)}; received {speed}."
+            )
+        reverse_trim = (
+            settings.drive.reverse_left_pwm,
+            settings.drive.reverse_right_pwm,
+        )
 
     require_physical_safety_confirmation(
         floor_test=args.floor_test,
@@ -254,9 +273,10 @@ def main() -> None:
     robot = connect_robot(settings, args.transport)
     try:
         with robot:
-            if forward_trim is not None and not robot.probe_differential_capability():
+            trim_configured = forward_trim is not None or reverse_trim is not None
+            if trim_configured and not robot.probe_differential_capability():
                 raise SystemExit(
-                    "Forward trim refused: differential firmware capability "
+                    "Drive trim refused: differential firmware capability "
                     "was not verified."
                 )
             curses.wrapper(
@@ -265,6 +285,7 @@ def main() -> None:
                 speed=speed,
                 pulse_duration_ms=settings.safety.teleop_pulse_duration_ms,
                 forward_trim=forward_trim,
+                reverse_trim=reverse_trim,
             )
     except KeyboardInterrupt:
         print("\nStopped safely.")

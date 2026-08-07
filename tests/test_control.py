@@ -38,7 +38,10 @@ class MotionLimitTests(unittest.TestCase):
         self.assertEqual(settings.safety.teleop_pulse_duration_ms, 250)
         self.assertTrue(settings.drive.forward_trim_enabled)
         self.assertEqual(settings.drive.forward_left_pwm, 100)
-        self.assertEqual(settings.drive.forward_right_pwm, 87)
+        self.assertEqual(settings.drive.forward_right_pwm, 86)
+        self.assertTrue(settings.drive.reverse_trim_enabled)
+        self.assertEqual(settings.drive.reverse_left_pwm, -100)
+        self.assertEqual(settings.drive.reverse_right_pwm, -86)
 
     def test_one_shot_defaults_match_verified_raised_track_pulse(self) -> None:
         args = build_argument_parser().parse_args(["--direction", "forward"])
@@ -69,7 +72,7 @@ class MotionLimitTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "requires untethered Wi-Fi"):
             validate_teleop_mode(transport="serial", floor_test=True)
 
-    def test_forward_trim_uses_differential_motion_only_for_forward(self) -> None:
+    def test_straight_trims_use_differential_motion(self) -> None:
         class FakeRobot:
             def __init__(self) -> None:
                 self.calls: list[tuple[object, ...]] = []
@@ -96,20 +99,31 @@ class MotionLimitTests(unittest.TestCase):
             MotionDirection.FORWARD,
             speed=100,
             duration_ms=250,
-            forward_trim=(100, 87),
+            forward_trim=(100, 86),
+            reverse_trim=(-100, -86),
         )
         send_manual_pulse(
             robot,
             MotionDirection.BACKWARD,
             speed=100,
             duration_ms=250,
-            forward_trim=(100, 87),
+            forward_trim=(100, 86),
+            reverse_trim=(-100, -86),
+        )
+        send_manual_pulse(
+            robot,
+            MotionDirection.LEFT,
+            speed=100,
+            duration_ms=250,
+            forward_trim=(100, 86),
+            reverse_trim=(-100, -86),
         )
         self.assertEqual(
             robot.calls,
             [
-                ("differential", 100, 87, 250),
-                ("timed", MotionDirection.BACKWARD, 100, 250),
+                ("differential", 100, 86, 250),
+                ("differential", -100, -86, 250),
+                ("timed", MotionDirection.LEFT, 100, 250),
             ],
         )
 

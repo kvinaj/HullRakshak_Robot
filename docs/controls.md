@@ -20,10 +20,11 @@ Default host limits:
 - keyboard pulse: 250 ms.
 
 Measured forward trim is stored in `config/robot.toml`: left PWM 100 and right
-PWM 87. Forward one-shot and keyboard commands use this differential pair only
-after the current connection returns `{CAP_1}`. Reverse and turning commands
-continue using the locally timed direction command. Missing capability causes
-refusal, never an untrimmed fallback.
+PWM 86. Forward one-shot and keyboard commands use this differential pair.
+Reverse uses the matching signed pair, left PWM -100 and right PWM -86.
+Both straight directions require the current connection to return `{CAP_1}`.
+Turning commands continue using the locally timed direction command. Missing
+capability causes refusal, never an untrimmed straight-motion fallback.
 
 Values outside these limits raise an exception before serial or Wi-Fi output.
 The API sends factory `N=2`. It never sends the factory firmware's indefinite
