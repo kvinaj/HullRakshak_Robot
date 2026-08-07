@@ -13,6 +13,7 @@ dependencies = [
 
 [project.scripts]
 hullrakshak-calibrate = "hullrakshak.applications.calibrate:main"
+hullrakshak-assisted-forward = "hullrakshak.applications.assisted_forward:main"
 hullrakshak-differential-pulse = "hullrakshak.applications.differential_pulse:main"
 hullrakshak-obstacle-guard = "hullrakshak.applications.obstacle_guard:main"
 hullrakshak-pulse = "hullrakshak.applications.motion_test:main"

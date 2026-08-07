@@ -36,6 +36,12 @@ class MotionLimitTests(unittest.TestCase):
             3000,
         )
         self.assertEqual(settings.safety.teleop_pulse_duration_ms, 250)
+        self.assertEqual(settings.safety.assisted_pulse_duration_ms, 250)
+        self.assertEqual(settings.safety.assisted_medium_distance_cm, 30)
+        self.assertEqual(settings.safety.assisted_medium_pulse_duration_ms, 150)
+        self.assertEqual(settings.safety.assisted_near_distance_cm, 20)
+        self.assertEqual(settings.safety.assisted_near_pulse_duration_ms, 75)
+        self.assertEqual(settings.safety.maximum_assisted_run_seconds, 60.0)
         self.assertTrue(settings.drive.forward_trim_enabled)
         self.assertEqual(settings.drive.forward_left_pwm, 100)
         self.assertEqual(settings.drive.forward_right_pwm, 86)

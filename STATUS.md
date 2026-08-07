@@ -162,3 +162,32 @@ firmware. No candidate upload or differential motor test has occurred.
 
 The next safety gate is an explicitly armed, bounded assisted-forward test that
 checks the ultrasonic distance before permitting a single motion pulse.
+
+## Assisted forward physically verified on 2026-08-07
+
+- A blocked-start Wi-Fi floor test measured an obstacle at 8 cm, sent no motion
+  command, and both tracks remained stationary.
+- A moving test began at 61 cm and advanced using calibrated 250 ms differential
+  pulses. Ultrasonic readings decreased consistently as the robot approached.
+- At 16 cm the path was still permitted; after one final pulse the next reading
+  was 11 cm, which produced `STOP`. The robot stopped automatically without
+  contacting the obstacle.
+- The assisted session has a 60-second ceiling, while every individual UNO
+  command remains locally self-expiring after 250 ms.
+
+The first sensor-controlled movement gate has passed. The measured 16-to-11 cm
+final step shows that approach-speed/pulse reduction near the threshold should
+be added before treating 15 cm as a precise final stand-off distance.
+
+## Adaptive obstacle approach verified on 2026-08-07
+
+- Assisted forward now uses 250 ms pulses above 30 cm, 150 ms pulses from
+  30 cm through 21 cm, and 75 ms pulses from 20 cm through 16 cm.
+- A physical Wi-Fi floor run transitioned through all three pulse ranges while
+  the measured distance decreased from 57 cm to 15 cm.
+- At 15 cm the guard sent stop automatically, the robot did not contact the
+  obstacle, and the physical stand-off distance was approximately 15 cm.
+- Both tracks continued responding reliably to the shortest 75 ms pulses.
+
+Adaptive forward stopping is commissioned. Obstacle turning or path selection
+has not yet been implemented or physically tested.

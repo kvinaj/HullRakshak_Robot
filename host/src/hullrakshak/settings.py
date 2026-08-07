@@ -39,6 +39,12 @@ class SafetySettings:
     maximum_floor_test_duration_ms: int
     maximum_differential_floor_test_duration_ms: int
     teleop_pulse_duration_ms: int
+    assisted_pulse_duration_ms: int
+    assisted_medium_distance_cm: int
+    assisted_medium_pulse_duration_ms: int
+    assisted_near_distance_cm: int
+    assisted_near_pulse_duration_ms: int
+    maximum_assisted_run_seconds: float
     obstacle_stop_distance_cm: int
 
 
@@ -98,6 +104,24 @@ def load_settings(path: Path = DEFAULT_CONFIG_PATH) -> Settings:
             ),
             teleop_pulse_duration_ms=int(
                 raw["safety"]["teleop_pulse_duration_ms"]
+            ),
+            assisted_pulse_duration_ms=int(
+                raw["safety"]["assisted_pulse_duration_ms"]
+            ),
+            assisted_medium_distance_cm=int(
+                raw["safety"]["assisted_medium_distance_cm"]
+            ),
+            assisted_medium_pulse_duration_ms=int(
+                raw["safety"]["assisted_medium_pulse_duration_ms"]
+            ),
+            assisted_near_distance_cm=int(
+                raw["safety"]["assisted_near_distance_cm"]
+            ),
+            assisted_near_pulse_duration_ms=int(
+                raw["safety"]["assisted_near_pulse_duration_ms"]
+            ),
+            maximum_assisted_run_seconds=float(
+                raw["safety"]["maximum_assisted_run_seconds"]
             ),
             obstacle_stop_distance_cm=int(
                 raw["safety"]["obstacle_stop_distance_cm"]
